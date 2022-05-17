@@ -10,7 +10,7 @@ public class Game : MonoBehaviour {
     public int mineCount = 32;
 
     private Board board;
-    private Cell[,] state;
+    private Cell[,] cells;
     private bool gameover;
 
     private void OnValidate() {
@@ -29,14 +29,14 @@ public class Game : MonoBehaviour {
         // Reset gameover bool in case we pressed R to restart the game after winning or losing.
         gameover = false;
         
-        state = new Cell[width, height];
+        cells = new Cell[width, height];
 
         GenerateCells();
         GenerateMines();
         GenerateNumbers();
 
         Camera.main.transform.position = new Vector3(width / 2f, height / 2f, -10f);
-        board.Draw(state);
+        board.Draw(cells);
     }
 
     private void GenerateCells() {
@@ -45,7 +45,7 @@ public class Game : MonoBehaviour {
                 Cell cell = new Cell();
                 cell.position = new Vector3Int(x, y, 0);
                 cell.type = Cell.Type.Empty;
-                state[x, y] = cell;
+                cells[x, y] = cell;
             }
         }
     }
@@ -55,7 +55,7 @@ public class Game : MonoBehaviour {
             int x = Random.Range(0, width);
             int y = Random.Range(0, height);
 
-            while (state[x, y].type == Cell.Type.Mine) {
+            while (cells[x, y].type == Cell.Type.Mine) {
                 x++;
 
                 if (x >= width) {
@@ -68,14 +68,14 @@ public class Game : MonoBehaviour {
                 }
             }
 
-            state[x, y].type = Cell.Type.Mine;
+            cells[x, y].type = Cell.Type.Mine;
         }
     }
 
     private void GenerateNumbers() {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                Cell cell = state[x, y];
+                Cell cell = cells[x, y];
 
                 if (cell.type == Cell.Type.Mine) {
                     continue;
@@ -87,7 +87,7 @@ public class Game : MonoBehaviour {
                     cell.type = Cell.Type.Number;
                 }
 
-                state[x, y] = cell;
+                cells[x, y] = cell;
             }
         }
     }
@@ -144,8 +144,9 @@ public class Game : MonoBehaviour {
         }
 
         cell.flagged = !cell.flagged;
-        state[cellPosition.x, cellPosition.y] = cell;
-        board.Draw(state);
+        cells[cellPosition.x, cellPosition.y] = cell;
+        board.Draw(cells);
+    }
     }
 
     private void Reveal() {
@@ -173,7 +174,7 @@ public class Game : MonoBehaviour {
             
             case Cell.Type.Number:
                 cell.revealed = true;
-                state[cell.position.x, cell.position.y] = cell;
+                cells[cell.position.x, cell.position.y] = cell;
                 CheckWinCondition();
                 break;
             
@@ -182,7 +183,7 @@ public class Game : MonoBehaviour {
                 throw new ArgumentOutOfRangeException();
         }
 
-        board.Draw(state);
+        board.Draw(cells);
     }
 
     /// <summary>
@@ -241,16 +242,16 @@ public class Game : MonoBehaviour {
         // Set the mine as exploded
         cell.exploded = true;
         cell.revealed = true;
-        state[cell.position.x, cell.position.y] = cell;
+        cells[cell.position.x, cell.position.y] = cell;
 
         // Reveal all other mines
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                cell = state[x, y];
+                cell = cells[x, y];
 
                 if (cell.type == Cell.Type.Mine) {
                     cell.revealed = true;
-                    state[x, y] = cell;
+                    cells[x, y] = cell;
                 }
             }
         }
@@ -270,10 +271,10 @@ public class Game : MonoBehaviour {
 
         // Reveal the cell
         cell.revealed = true;
-        state[cell.position.x, cell.position.y] = cell;
+        cells[cell.position.x, cell.position.y] = cell;
 
         // Wait before continuing the flood
-        board.Draw(state);
+        board.Draw(cells);
         // TODO: After switching this to a Coroutine we should probably guard against clicking while the animation plays.
         // TODO: Also if we click "R" to restart the game while the animation plays it will continue after the game resets.
         yield return new WaitForEndOfFrame();
@@ -298,7 +299,7 @@ public class Game : MonoBehaviour {
     private void CheckWinCondition() {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                Cell cell = state[x, y];
+                Cell cell = cells[x, y];
 
                 // All non-mine cells must be revealed to have won
                 if (cell.type != Cell.Type.Mine && !cell.revealed) {
@@ -313,11 +314,11 @@ public class Game : MonoBehaviour {
         // Flag all the mines
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                Cell cell = state[x, y];
+                Cell cell = cells[x, y];
 
                 if (cell.type == Cell.Type.Mine) {
                     cell.flagged = true;
-                    state[x, y] = cell;
+                    cells[x, y] = cell;
                 }
             }
         }
@@ -325,7 +326,7 @@ public class Game : MonoBehaviour {
 
     private Cell GetCell(int x, int y) {
         if (IsValid(x, y)) {
-            return state[x, y];
+            return cells[x, y];
         }
 
         return new Cell();
