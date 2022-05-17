@@ -128,6 +128,9 @@ public class Game : MonoBehaviour {
         else if (Input.GetMouseButtonDown(0)) {
             Reveal();
         }
+        else if (Input.GetMouseButtonDown(2)) {
+            RevealAdjacent();
+        }
     }
 
     private void Flag() {
@@ -177,6 +180,57 @@ public class Game : MonoBehaviour {
         }
 
         board.Draw(state);
+    }
+
+    /// <summary>
+    /// Reveal all adjacent tiles if we click a number cell, but only if we've flagged the corresponding number of cells
+    /// surrounding the clicked number.
+    /// </summary>
+    private void RevealAdjacent() {
+        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector3Int cellPosition = board.tilemap.WorldToCell(worldPosition);
+        Cell cell = GetCell(cellPosition.x, cellPosition.y);
+
+        if (!cell.revealed || cell.type != Cell.Type.Number) {
+            return;
+        }
+
+        int flagCount = 0;
+        for (int adjacentX = -1; adjacentX <= 1; adjacentX++) {
+            for (int adjacentY = -1; adjacentY <= 1; adjacentY++) {
+                if (adjacentX == 0 && adjacentY == 0) {
+                    continue;
+                }
+
+                Cell adjacentCell = GetCell(cell.position.x + adjacentX, cell.position.y + adjacentY);
+                if (adjacentCell.type == Cell.Type.Invalid) {
+                    continue;
+                }
+                if (adjacentCell.flagged) {
+                    flagCount++;
+                }
+            }
+        }
+
+        if (flagCount == cell.number) {
+            for (int adjacentX = -1; adjacentX <= 1; adjacentX++) {
+                for (int adjacentY = -1; adjacentY <= 1; adjacentY++) {
+                    if (adjacentX == 0 && adjacentY == 0) {
+                        continue;
+                    }
+
+                    Cell adjacentCell = GetCell(cell.position.x + adjacentX, cell.position.y + adjacentY);
+                    if (adjacentCell.type == Cell.Type.Invalid) {
+                        continue;
+                    }
+                    if (!adjacentCell.revealed && !adjacentCell.flagged) {
+                        adjacentCell.revealed = true;
+                        state[adjacentCell.position.x, adjacentCell.position.y] = adjacentCell;
+                    }
+                }
+            }
+            board.Draw(state);
+        }
     }
 
     private void Explode(Cell cell) {
