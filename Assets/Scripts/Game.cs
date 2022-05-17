@@ -152,7 +152,10 @@ public class Game : MonoBehaviour {
         Vector3 worldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector3Int cellPosition = board.tilemap.WorldToCell(worldPosition);
         Cell cell = GetCell(cellPosition.x, cellPosition.y);
-
+        Reveal(cell);
+    }
+    
+    private void Reveal(Cell cell) {
         // Cannot reveal if already revealed or while flagged
         if (cell.type == Cell.Type.Invalid || cell.revealed || cell.flagged) {
             return;
@@ -170,7 +173,7 @@ public class Game : MonoBehaviour {
             
             case Cell.Type.Number:
                 cell.revealed = true;
-                state[cellPosition.x, cellPosition.y] = cell;
+                state[cell.position.x, cell.position.y] = cell;
                 CheckWinCondition();
                 break;
             
@@ -224,12 +227,10 @@ public class Game : MonoBehaviour {
                         continue;
                     }
                     if (!adjacentCell.revealed && !adjacentCell.flagged) {
-                        adjacentCell.revealed = true;
-                        state[adjacentCell.position.x, adjacentCell.position.y] = adjacentCell;
+                        Reveal(adjacentCell);
                     }
                 }
             }
-            board.Draw(state);
         }
     }
 
