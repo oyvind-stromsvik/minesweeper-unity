@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -160,7 +161,7 @@ public class Game : MonoBehaviour {
                 break;
 
             case Cell.Type.Empty:
-                Flood(cell);
+                StartCoroutine(Flood(cell));
                 CheckWinCondition();
                 break;
             
@@ -200,26 +201,34 @@ public class Game : MonoBehaviour {
         }
     }
 
-    private void Flood(Cell cell) {
+    private IEnumerator Flood(Cell cell) {
         // Recursive exit conditions
         if (cell.revealed) {
-            return;
+            yield break;
+
         }
 
         if (cell.type is Cell.Type.Mine or Cell.Type.Invalid) {
-            return;
+            yield break;
+
         }
 
         // Reveal the cell
         cell.revealed = true;
         state[cell.position.x, cell.position.y] = cell;
 
+        // Wait before continuing the flood
+        board.Draw(state);
+        // TODO: After switching this to a Coroutine we should probably guard against clicking while the animation plays.
+        // TODO: Also if we click "R" to restart the game while the animation plays it will continue after the game resets.
+        yield return new WaitForEndOfFrame();
+
         // Keep flooding if the cell is empty, otherwise stop at numbers
         if (cell.type == Cell.Type.Empty) {
-            Flood(GetCell(cell.position.x - 1, cell.position.y));
-            Flood(GetCell(cell.position.x + 1, cell.position.y));
-            Flood(GetCell(cell.position.x, cell.position.y - 1));
-            Flood(GetCell(cell.position.x, cell.position.y + 1));
+            StartCoroutine(Flood(GetCell(cell.position.x - 1, cell.position.y)));
+            StartCoroutine(Flood(GetCell(cell.position.x + 1, cell.position.y)));
+            StartCoroutine(Flood(GetCell(cell.position.x, cell.position.y - 1)));
+            StartCoroutine(Flood(GetCell(cell.position.x, cell.position.y + 1)));
         }
     }
 
