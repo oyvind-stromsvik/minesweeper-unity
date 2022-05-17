@@ -279,10 +279,18 @@ public class Game : MonoBehaviour {
 
         // Keep flooding if the cell is empty, otherwise stop at numbers
         if (cell.type == Cell.Type.Empty) {
-            StartCoroutine(Flood(GetCell(cell.position.x - 1, cell.position.y)));
-            StartCoroutine(Flood(GetCell(cell.position.x + 1, cell.position.y)));
-            StartCoroutine(Flood(GetCell(cell.position.x, cell.position.y - 1)));
-            StartCoroutine(Flood(GetCell(cell.position.x, cell.position.y + 1)));
+            for (int adjacentX = -1; adjacentX <= 1; adjacentX++) {
+                for (int adjacentY = -1; adjacentY <= 1; adjacentY++) {
+                    if (adjacentX == 0 && adjacentY == 0) {
+                        continue;
+                    }
+
+                    int x = cell.position.x + adjacentX;
+                    int y = cell.position.y + adjacentY;
+
+                    StartCoroutine(Flood(GetCell(x, y)));
+                }
+            }
         }
     }
 
